@@ -1,0 +1,44 @@
+# -----------------------------------------
+# Wazuh Test Log Generator - Windows
+# Generates file, process, and registry events
+# -----------------------------------------
+
+Write-Host "Starting Wazuh log generation test..." -ForegroundColor Green
+
+# 1️⃣ Create Temp folder if it doesn't exist
+$TempPath = "C:\Temp"
+if (-not (Test-Path $TempPath)) {
+    New-Item -Path $TempPath -ItemType Directory
+    Write-Host "Created $TempPath" -ForegroundColor Yellow
+}
+
+# 2️⃣ File create / modify / delete
+Write-Host "Generating file events..."
+$Files = 1..5 | ForEach-Object { "$TempPath\testfile$_.txt" }
+foreach ($file in $Files) {
+    New-Item -Path $file -ItemType File
+    Set-Content -Path $file -Value "Wazuh test log $_"
+    Start-Sleep -Milliseconds 200
+    Remove-Item -Path $file
+}
+
+# 3️⃣ Process execution
+Write-Host "Generating process events..."
+$Processes = @("notepad.exe","calc.exe","mspaint.exe")
+foreach ($proc in $Processes) {
+    Start-Process $proc
+    Start-Sleep -Seconds 1
+}
+
+# 4️⃣ Registry changes
+Write-Host "Generating registry events..."
+$RegPath = "HKCU:\Software\TestWazuh"
+if (-not (Test-Path $RegPath)) { New-Item -Path $RegPath }
+
+New-ItemProperty -Path $RegPath -Name "TestValue1" -Value "123" -PropertyType String
+New-ItemProperty -Path $RegPath -Name "TestValue2" -Value "ABC" -PropertyType String
+Remove-ItemProperty -Path $RegPath -Name "TestValue1"
+Remove-ItemProperty -Path $RegPath -Name "TestValue2"
+
+# 5️⃣ Done
+Write-Host "Wazuh log generation completed! Check dashboard for events." -ForegroundColor Green
